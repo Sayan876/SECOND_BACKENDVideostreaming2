@@ -18,8 +18,12 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	
 	
 //	@NativeQuery("UPDATE secondvideobase.user SET name=?1, password=?2, biodetails=?3, country=?4 where id=?5;")
-	@Query("update User u set u.name=?1,u.password=?2,u.biodetails=?3,u.country=?4 where u.id=?5")
-	public User updateDetails(String name, String pass, String biodetails, String country, int id);
+    @Query("UPDATE User u SET u.name = ?1, u.biodetails = ?2, u.country = ?3 WHERE u.id = ?4")
+	public User updateDetails(String name, String biodetails, String country, int id);
+	
+// for password changing 	
+	@Query("UPDATE User u SET u.password=?1 where u.id=?2 ")
+	public User updateUserPasword(String password, int id);
 	
 	
 
