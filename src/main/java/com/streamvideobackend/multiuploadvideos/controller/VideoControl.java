@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v4/videos")
-@CrossOrigin("https://video-streaming-frontend-eight.vercel.app")
+@CrossOrigin("*")
 @RequiredArgsConstructor
 public class VideoControl {
 
