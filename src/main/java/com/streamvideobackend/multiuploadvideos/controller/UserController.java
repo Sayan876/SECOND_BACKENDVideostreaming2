@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin("https://video-streaming-frontend-eight.vercel.app")
+@CrossOrigin("*")
 public class UserController {
 
     private final UserService userService;
