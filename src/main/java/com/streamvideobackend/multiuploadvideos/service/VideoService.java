@@ -100,8 +100,8 @@ public class VideoService {
 
     //for searching title
     public List<Video> getVideoByTitle(String title) {
-        return videoRepository.getVideosByTitle(title);
-    }
+    return videoRepository.findByTitleContainingIgnoreCase(title);
+}
 
     public User getUserByVideoId(String videoId) {
         return videoRepository.findUserByVideoId(videoId);
