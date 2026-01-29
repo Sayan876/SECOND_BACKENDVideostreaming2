@@ -41,6 +41,8 @@ public interface VideoRepository extends JpaRepository<Video, String> {
 	//Search video by Title only. 
 	@Query("SELECT v FROM Video v WHERE v.title=?1")
 	public List<Video> getVideosByTitle(String title);
+
+	List<Video> findByTitleContainingIgnoreCase(String title);
 	
 	//Fetch user by video id number. 
 	@Query("SELECT v.user FROM Video v WHERE v.videoId=?1")
