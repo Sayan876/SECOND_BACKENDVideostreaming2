@@ -106,4 +106,9 @@ public class VideoControl {
             return ResponseEntity.notFound().build();
         return ResponseEntity.ok(result);
     }
+    
+    @GetMapping("/feed")
+    public List<Video> getVideoFeed() {
+        return videoService.getAllVideosWithUploader();
+    }
 }
