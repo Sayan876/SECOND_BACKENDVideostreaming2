@@ -124,20 +124,18 @@ public class UserService {
 
 
 	//Change password 
-	public User updateUserPassword(String password, int id) {
-		Optional<User> optionalUser = userRepository.findById(id);
-		if(optionalUser.isEmpty()) {
-			throw new RuntimeException("User not found with ID:" + id);
-		}
-		User user = optionalUser.get();
-		try {
-			user.setPassword(password);
-			
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		return userRepository.save(user);
+    public User updateUserPassword(String newPassword, int id, String oldPassword) {
+
+	    User user = userRepository.findById(id)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    // VALIDATE OLD PASSWORD
+	    if (!user.getPassword().equals(oldPassword)) {
+	        throw new RuntimeException("Old password is incorrect");
+	    }
+
+	    user.setPassword(newPassword);
+	    return userRepository.save(user);
 	}
 	
 	public User getUserById(int id) {
