@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,5 +52,6 @@ public class User {
     private String email;
 
     @OneToMany(mappedBy = "user", orphanRemoval = true)
+    @JsonIgnore
     private List<Video> videos;
 }
