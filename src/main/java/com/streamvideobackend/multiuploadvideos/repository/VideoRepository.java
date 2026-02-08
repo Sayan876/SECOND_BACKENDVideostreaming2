@@ -43,6 +43,7 @@ public interface VideoRepository extends JpaRepository<Video, String> {
 	@Query("SELECT v FROM Video v WHERE v.title=?1")
 	public List<Video> getVideosByTitle(String title);
 
+	@EntityGraph(attributePaths = "user")
 	List<Video> findByTitleContainingIgnoreCase(String title);
 	
 	//Fetch user by video id number. 
