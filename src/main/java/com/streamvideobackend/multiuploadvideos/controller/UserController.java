@@ -74,14 +74,17 @@ public class UserController {
     
     //changing the password 
     @PatchMapping("/user/{id}/updatePassword")
-    public ResponseEntity<User> userPasswordChange(@PathVariable int id, @RequestParam String password){
-          try {
-			User  user = userService.updateUserPassword(password, id);
-			  return ResponseEntity.ok(user);
-		  } catch (Exception e) {
-			// TODO Auto-generated catch block
-			return ResponseEntity.badRequest().build();
-		  }
+    public ResponseEntity<?> userPasswordChange(
+            @PathVariable int id,
+            @RequestParam String newPassword,
+            @RequestParam String oldPassword) {
+
+        try {
+            User user = userService.updateUserPassword(newPassword, id, oldPassword);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
      //Get all users
