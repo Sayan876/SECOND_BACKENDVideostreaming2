@@ -130,4 +130,10 @@ public class VideoService {
     public List<Video> getVideosbyEmailandPass(String email, String pass) {
         return videoRepository.getVideosByUserEmailandPassword(email, pass);
     }
+    
+    public List<Video> getAllVideosWithUploader() {
+        return videoRepository.findAllVideosWithUsers1();
+    }
+    
+    
 }
