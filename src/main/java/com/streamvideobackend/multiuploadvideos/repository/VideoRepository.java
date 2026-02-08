@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.streamvideobackend.multiuploadvideos.dto.User;
 import com.streamvideobackend.multiuploadvideos.dto.Video;
+import com.streamvideobackend.multiuploadvideos.dto.VideoFeedDto;
 
 
 @Repository
@@ -47,6 +48,20 @@ public interface VideoRepository extends JpaRepository<Video, String> {
 	//Fetch user by video id number. 
 	@Query("SELECT v.user FROM Video v WHERE v.videoId=?1")
 	public User findUserByVideoId(String videoId);
+	
+	@Query("SELECT v FROM Video v JOIN FETCH v.user ORDER BY v.uploadedAt DESC")
+	List<Video> findAllVideosWithUsers();
+	
+	//This will fetch the user details along with the videos
+	@Query("""
+		    SELECT v
+		    FROM Video v
+		    JOIN FETCH v.user
+		    ORDER BY v.uploadedAt DESC
+		""")
+		List<Video> findAllVideosWithUsers1();
+
+
 
 	
 	
