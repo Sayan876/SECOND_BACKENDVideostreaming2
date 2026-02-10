@@ -29,6 +29,13 @@ public class UserController {
 
     private final UserService userService;
 
+
+    @GetMapping("/health")
+    public String health() {
+    	System.out.println("Ready set go!");
+    	return "ok";
+    }
+
     // Create user with optional profile picture
     @PostMapping("/user")
     public ResponseEntity<User> postUser(@RequestParam String name, @RequestParam String email,
