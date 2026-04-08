@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.streamvideobackend.multiuploadvideos.dto.ApiResponse1;
 import com.streamvideobackend.multiuploadvideos.dto.LoginRequest;
 import com.streamvideobackend.multiuploadvideos.dto.User;
 import com.streamvideobackend.multiuploadvideos.service.PasswordResetService;
@@ -45,15 +46,30 @@ public class UserController {
 
     // Create user with optional profile picture
     @PostMapping("/user")
-    public ResponseEntity<User> postUser(@RequestParam String name, @RequestParam String email,
-                                         @RequestParam String password, @RequestParam String biodetails,
-                                         @RequestParam String country,
-                                         @RequestParam(required = false) MultipartFile profilePic) {
+    public ResponseEntity<ApiResponse1> postUser(
+            @RequestParam String name,
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam String biodetails,
+            @RequestParam String country,
+            @RequestParam(required = false) MultipartFile profilePic) {
+
         try {
             User user = userService.postUser(name, email, password, biodetails, country, profilePic);
-            return ResponseEntity.ok(user);
+
+            return ResponseEntity.ok(
+                    new ApiResponse1(true, "User created successfully", user)
+            );
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                    new ApiResponse1(false, e.getMessage(), null)
+            );
+
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(500).body(
+                    new ApiResponse1(false, "Something went wrong", null)
+            );
         }
     }
 

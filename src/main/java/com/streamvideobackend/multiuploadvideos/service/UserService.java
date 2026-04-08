@@ -59,6 +59,11 @@ public class UserService {
 	// Create user with profile pic uploaded to Cloudinary
 	public User postUser(String name, String email, String password, String biodetails, String country,
 			MultipartFile profilePic) {
+		
+		//First check email if it's already available in database. 
+		if (userRepository.existsByEmail(email)) {
+	        throw new RuntimeException("Email already exists");
+	    }
 
 		User user = new User();
 		user.setName(name);

@@ -41,7 +41,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject("Email Verification OTP");
         message.setText("Your verification OTP is: " + otp +
-                "\nThis OTP is valid for 10 minutes.");
+                "\nThis OTP is valid for 10 minutes." + "\nGo to the link below"+"\nhttps://video-streaming-frontend-eight.vercel.app/verify-account/"+to);
         message.setFrom("sayandatta9876@gmail.com");
 
         mailSender.send(message);

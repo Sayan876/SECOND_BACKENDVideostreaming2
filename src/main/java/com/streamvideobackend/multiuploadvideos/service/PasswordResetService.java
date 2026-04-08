@@ -60,7 +60,7 @@ public class PasswordResetService {
 
         tokenRepository.save(resetToken);
 
-        String resetLink = "http://localhost:3000/reset-password?token=" + token;
+        String resetLink = "https://video-streaming-frontend-eight.vercel.app/reset-password?token=" + token;
 
         // Send email only if new token is created
         emailService.sendResetEmail(user.getEmail(), resetLink);
