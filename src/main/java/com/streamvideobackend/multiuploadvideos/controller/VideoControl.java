@@ -65,6 +65,11 @@ public class VideoControl {
     public ResponseEntity<List<Video>> getVideosByUser(@PathVariable int id) {
         return ResponseEntity.ok(videoService.getVideoByUserIdNumber(id));
     }
+    
+    @GetMapping("/byOneName/{oneName}")
+    public ResponseEntity<List<Video>> getVideosByOneName(@PathVariable String oneName){
+    	return ResponseEntity.ok(videoService.getVideosByOneName(oneName));
+    }
 
     // Search videos by title
     @GetMapping("/searchByTitle/{title}")

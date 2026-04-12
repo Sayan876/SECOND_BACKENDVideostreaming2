@@ -49,6 +49,8 @@ public class User {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime accountCreatedAt;
+    @Column(unique = true)
+    private String oneName;
 
     @Column(unique = true)
     private String email;

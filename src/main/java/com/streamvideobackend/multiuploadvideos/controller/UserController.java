@@ -43,6 +43,12 @@ public class UserController {
     	System.out.println("Ready set go!");
     	return "ok";
     }
+    
+    @GetMapping("/fix-onenames")
+    public String fixOneNames() {
+        userService.backfillOneNamesForExistingUsers();
+        return "Done";
+    }
 
     // Create user with optional profile picture
     @PostMapping("/user")
@@ -131,6 +137,15 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(user);
+    }
+    
+    @GetMapping("/userOne/{oneName}")
+    public ResponseEntity<User> getUserByOneName(@PathVariable String oneName){
+    	User user = userService.getUserByOneName(oneName);
+    	if(user == null) {
+    		return ResponseEntity.notFound().build();
+    	}
+    	return ResponseEntity.ok(user);
     }
 
     // Verify user by email & password

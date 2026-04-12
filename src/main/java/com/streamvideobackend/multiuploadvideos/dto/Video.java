@@ -48,6 +48,7 @@ public class Video {
     @JoinColumn(name = "user_id")
     @JsonIgnoreProperties({
         "videos",
+        "id",
         "password",
         "email",
         "profilePicPublicId",

@@ -99,7 +99,9 @@ public class VideoService {
         return videoRepository.getVideosByUserId(id);
     }
     
-    
+    public List<Video> getVideosByOneName(String oneName){
+    	return videoRepository.getVideosByOneName(oneName);
+    }
     
 
     //for searching title

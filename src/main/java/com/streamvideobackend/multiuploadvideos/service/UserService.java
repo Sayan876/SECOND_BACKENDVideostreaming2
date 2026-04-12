@@ -55,6 +55,39 @@ public class UserService {
 		cloudinary = new Cloudinary(
 				ObjectUtils.asMap("cloud_name", cloudName, "api_key", apiKey, "api_secret", apiSecret));
 	}
+	
+	private String generateOneName(String name) {
+	    String cleanName = name.toLowerCase().replaceAll("[^a-z0-9]", "");
+	    int random = 1000 + new java.util.Random().nextInt(90000);
+	    return cleanName + "_" + random;
+	}
+	
+	private String generateUniqueOneName(String name) {
+	    String oneName;
+
+	    do {
+	        oneName = generateOneName(name);
+	    } while (userRepository.existsByOneName(oneName));
+
+	    return oneName;
+	}
+	
+	
+	public void backfillOneNamesForExistingUsers() {
+
+	    List<User> users = userRepository.findAll();
+
+	    for (User user : users) {
+
+	        if (user.getOneName() == null || user.getOneName().isEmpty()) {
+
+	            String oneName = generateUniqueOneName(user.getName());
+	            user.setOneName(oneName);
+	        }
+	    }
+
+	    userRepository.saveAll(users);
+	}
 
 	// Create user with profile pic uploaded to Cloudinary
 	public User postUser(String name, String email, String password, String biodetails, String country,
@@ -72,6 +105,8 @@ public class UserService {
 
 		user.setBiodetails(biodetails);
 		user.setCountry(country);
+		
+		user.setOneName(generateUniqueOneName(name));
 
 		if (profilePic != null && !profilePic.isEmpty()) {
 		    try {
@@ -167,6 +202,15 @@ public class UserService {
 		    return user;
 	}
 	
+	public User getUserByOneName(String oneName) {
+		User user = userRepository.findByOneName(oneName).orElse(null);
+		if(user != null) {
+			user.setPassword(null);
+			user.setId(0);
+			user.setEmail(null);
+		}
+		return user;
+	}
 	
 	
 	public List<User> getAllUsers() {

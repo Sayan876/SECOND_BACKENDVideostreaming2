@@ -33,6 +33,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	
 	boolean existsByEmail(String email);
 	
+	boolean existsByOneName(String oneName);
+	
+	public Optional<User> findByOneName(String oneName);
+	
 	
 
 	

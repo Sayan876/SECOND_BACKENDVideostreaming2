@@ -22,6 +22,9 @@ public interface VideoRepository extends JpaRepository<Video, String> {
 	@Query("SELECT v FROM User u JOIN u.videos v WHERE u.id=?1 ORDER BY v.uploadedAt DESC ")
 	public List<Video> getVideosByUserId(int id);
 	
+	@Query("SELECT v FROM User u JOIN u.videos v where u.oneName=?1 ORDER BY v.uploadedAt DESC ")
+	public List<Video> getVideosByOneName(String oneName);
+	
 //	@NativeQuery("SELECT * FROM newvidbase.video where user_id=(select id from newvidbase.user where email='sayan43245@gmail.com' and password='abcd' );")
 	@Query("select u.videos from User u where u.email=?1 and u.password=?2")
 	public List<Video> getVideosByUserEmailandPassword(String email, String password);
