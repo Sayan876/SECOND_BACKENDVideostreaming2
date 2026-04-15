@@ -75,13 +75,14 @@ public class VideoService {
     }
 
     // Update title and description
-    public Video updatetanddec(String title, String description, String videoId) {
+    public Video updatetanddec(String title, String description, String category, String videoId) {
         Optional<Video> recVideo = videoRepository.findById(videoId);
         if (recVideo.isEmpty()) return null;
 
         Video video = recVideo.get();
         video.setTitle(title);
         video.setDescription(description);
+        video.setCategory(category);
         return videoRepository.save(video);
     }
 
@@ -93,6 +94,10 @@ public class VideoService {
     public Video getVideoById(String id) {
         return videoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Video not found"));
+    }
+    
+    public List<Video> getVideosByCategory(String category) {
+        return videoRepository.findByCategoryIgnoreCase(category);
     }
 
     public List<Video> getVideoByUserIdNumber(int id) {
@@ -110,7 +115,14 @@ public class VideoService {
 }
 
     public User getUserByVideoId(String videoId) {
-        return videoRepository.findUserByVideoId(videoId);
+        User user =  videoRepository.findUserByVideoId(videoId);
+        if(user!=null) {
+        	user.setId(0);
+        	user.setPassword(null);
+        	user.setEmail(null);
+        	return user;
+        }
+        return null;
     }
 
     // Delete video from Cloudinary and DB

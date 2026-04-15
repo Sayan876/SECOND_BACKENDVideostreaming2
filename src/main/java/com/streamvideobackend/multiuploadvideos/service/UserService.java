@@ -1,5 +1,6 @@
 package com.streamvideobackend.multiuploadvideos.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import java.util.Random;
 
 
@@ -11,6 +12,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -128,29 +130,34 @@ public class UserService {
 	}
 
 	// Update user profile image
-	public User updateUserProfileImage(int userId, MultipartFile newProfilePic) {
-		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+	public User updateUserProfileImage(String email, MultipartFile newProfilePic) {
 
-		try {
-			// Delete old image from Cloudinary
-			if (user.getProfilePicPublicId() != null) {
-				cloudinary.uploader().destroy(user.getProfilePicPublicId(),
-						ObjectUtils.asMap("resource_type", "image"));
-			}
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
 
-			// Upload new image
-			Map uploadResult = cloudinary.uploader().upload(newProfilePic.getBytes(),
-					ObjectUtils.asMap("resource_type", "image", "folder", "profilePics"));
+	    try {
+	        // delete old image
+	        if (user.getProfilePicPublicId() != null) {
+	            cloudinary.uploader().destroy(
+	                    user.getProfilePicPublicId(),
+	                    ObjectUtils.asMap("resource_type", "image")
+	            );
+	        }
 
-			user.setProfilePicUrl(uploadResult.get("secure_url").toString());
-			user.setProfilePicPublicId(uploadResult.get("public_id").toString());
+	        // upload new image
+	        Map uploadResult = cloudinary.uploader().upload(
+	                newProfilePic.getBytes(),
+	                ObjectUtils.asMap("resource_type", "image", "folder", "profilePics")
+	        );
 
-			return userRepository.save(user);
+	        user.setProfilePicUrl(uploadResult.get("secure_url").toString());
+	        user.setProfilePicPublicId(uploadResult.get("public_id").toString());
 
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to update profile image for user ID: " + userId, e);
-		}
+	        return userRepository.save(user);
+
+	    } catch (IOException e) {
+	        throw new RuntimeException("Upload failed", e);
+	    }
 	}
 
 	//Update user details 
@@ -191,6 +198,10 @@ public class UserService {
 	    user.setPassword(passwordEncoder.encode(newPassword));
 
 	    return userRepository.save(user);
+	}
+	
+	public Optional<User> getMyProfile(String email){
+		return userRepository.findByEmail(email);
 	}
 
 	
@@ -332,23 +343,40 @@ public class UserService {
 	public void verifyOtp(String email, String otp) {
 
 	    User user = userRepository.findByEmail(email)
-	            .orElseThrow(() -> new RuntimeException("User not found"));
+	            .orElseThrow(() -> new ResponseStatusException(
+	                    HttpStatus.NOT_FOUND,
+	                    "User not found"
+	            ));
 
 	    EmailVerificationOTP verificationOTP = otpRepository.findByUser(user)
-	            .orElseThrow(() -> new RuntimeException("OTP not found"));
+	            .orElseThrow(() -> new ResponseStatusException(
+	                    HttpStatus.NOT_FOUND,
+	                    "OTP not found"
+	            ));
 
 	    if (verificationOTP.getExpiryDate().isBefore(LocalDateTime.now())) {
-	        throw new RuntimeException("OTP expired");
+	        throw new ResponseStatusException(
+	                HttpStatus.BAD_REQUEST,
+	                "OTP expired"
+	        );
 	    }
 
 	    if (!verificationOTP.getOtp().equals(otp)) {
-	        throw new RuntimeException("Invalid OTP");
+	        throw new ResponseStatusException(
+	                HttpStatus.BAD_REQUEST,
+	                "Invalid OTP"
+	        );
 	    }
 
 	    user.setVerified(true);
 	    userRepository.save(user);
 
 	    otpRepository.delete(verificationOTP);
+	}
+	
+	public User findByEmail(String email) {
+	    return userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 	}
 
 

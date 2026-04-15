@@ -33,8 +33,8 @@ public interface VideoRepository extends JpaRepository<Video, String> {
 //	@NativeQuery("DELETE FROM secondvideobase.video WHERE video_id=?;")
 //	public Video deleteVideoById(String videoId);
 	
-	@Query("update Video v set v.title=?1,v.description=?2 where v.videoId=?3 ")
-	public Video updateTitleorDescr(String title, String description, String videoId);
+	@Query("update Video v set v.title=?1,v.description=?2, v.category=?3   where v.videoId=?4 ")
+	public Video updateTitleorDescr(String title, String description, String category, String videoId);
 	
 	@Query("SELECT v.user.id FROM Video v WHERE v.videoId = ?1")
 	int findUserIdByVideoId(String videoId);
@@ -65,6 +65,9 @@ public interface VideoRepository extends JpaRepository<Video, String> {
 		    ORDER BY v.uploadedAt DESC
 		""")
 		List<Video> findAllVideosWithUsers1();
+	
+	
+	List<Video> findByCategoryIgnoreCase(String category);
 	
 	
 	

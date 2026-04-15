@@ -28,12 +28,14 @@ public class VideoControl {
     public ResponseEntity<?> create(@RequestParam("file") MultipartFile file,
                                     @RequestParam("title") String title,
                                     @RequestParam("description") String description,
+                                    @RequestParam("category") String category,
                                     @PathVariable int id) {
 
         Video video = Video.builder()
                 .videoId(UUID.randomUUID().toString())
                 .title(title)
                 .description(description)
+                .category(category)
                 .build();
 
         Video savedVideo = videoService.saveVideo(video, file, id);
@@ -44,9 +46,10 @@ public class VideoControl {
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateVideo(@PathVariable String id,
                                          @RequestParam("title") String title,
-                                         @RequestParam("description") String description) {
+                                         @RequestParam("description") String description,
+                                         @RequestParam("category") String category) {
 
-        Video updated = videoService.updatetanddec(title, description, id);
+        Video updated = videoService.updatetanddec(title, description, category, id);
         if (updated == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Video not found");
 
@@ -103,17 +106,31 @@ public class VideoControl {
     }
 
     // Verify videos by email & password (dev/testing only)
-    @PostMapping("/verifyep")
-    public ResponseEntity<List<Video>> verifyByEmailAndPass(@RequestParam String email,
-                                                            @RequestParam String password) {
-        List<Video> result = videoService.getVideosbyEmailandPass(email, password);
-        if (result == null || result.isEmpty())
-            return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(result);
-    }
+//    @PostMapping("/verifyep")
+//    public ResponseEntity<List<Video>> verifyByEmailAndPass(@RequestParam String email,
+//                                                            @RequestParam String password) {
+//        List<Video> result = videoService.getVideosbyEmailandPass(email, password);
+//        if (result == null || result.isEmpty())
+//            return ResponseEntity.notFound().build();
+//        return ResponseEntity.ok(result);
+//    }
     
     @GetMapping("/feed")
     public List<Video> getVideoFeed() {
         return videoService.getAllVideosWithUploader();
+    }
+    
+    @GetMapping("/byVideoId/{videoId}")
+    public ResponseEntity<Video> getVideoById(@PathVariable String videoId){
+    	Video video = videoService.getVideoById(videoId);
+    	if(video == null) {
+    		return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    	}
+    	return ResponseEntity.ok(video);
+    } 
+    
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<Video>> getByCategory(@PathVariable String category) {
+        return ResponseEntity.ok(videoService.getVideosByCategory(category));
     }
 }

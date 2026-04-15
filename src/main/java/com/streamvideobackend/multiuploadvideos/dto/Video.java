@@ -40,6 +40,9 @@ public class Video {
 
     @Column(nullable = false)
     private String videoUrl;
+    
+    @Column(nullable = true)
+    private String category; 
 
     @Column(nullable = false)
     private String publicId;
