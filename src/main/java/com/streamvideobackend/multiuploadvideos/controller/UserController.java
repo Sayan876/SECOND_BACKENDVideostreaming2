@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.streamvideobackend.multiuploadvideos.config.JwtUtil;
 import com.streamvideobackend.multiuploadvideos.dto.ApiResponse1;
 import com.streamvideobackend.multiuploadvideos.dto.LoginRequest;
 import com.streamvideobackend.multiuploadvideos.dto.User;
@@ -26,6 +27,7 @@ import com.streamvideobackend.multiuploadvideos.service.PasswordResetService;
 import com.streamvideobackend.multiuploadvideos.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -35,7 +37,8 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
 	private final UserService userService;
-
+	
+	
 	@Autowired
 	private PasswordResetService passwordResetService;
 
@@ -45,11 +48,11 @@ public class UserController {
 		return "ok";
 	}
 
-	@GetMapping("/fix-onenames")
-	public String fixOneNames() {
-		userService.backfillOneNamesForExistingUsers();
-		return "Done";
-	}
+//	@GetMapping("/fix-onenames")
+//	public String fixOneNames() {
+//		userService.backfillOneNamesForExistingUsers();
+//		return "Done";
+//	}
 
 	// Create user with optional profile picture
 	@PostMapping("/user")
@@ -97,29 +100,37 @@ public class UserController {
 
 	// Update user data (name, biodetails, country)
 
-	@PatchMapping("/user/{id}/details")
-	public ResponseEntity<User> updateUserDetails(@PathVariable int id, @RequestParam String name,
+	@PatchMapping("/user/details")
+	public ResponseEntity<User> updateUserDetails(
+	        @RequestParam String name,
+	        @RequestParam String biodetails,
+	        @RequestParam String country,
+	        Authentication auth
+	) {
+	    try {
+	        String email = auth.getName(); // 🔥 from JWT
 
-			@RequestParam String biodetails, @RequestParam String country) {
-		try {
-			User user = userService.updateDataUser(id, name, biodetails, country);
-			return ResponseEntity.ok(user);
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().build();
-		}
+	        User user = userService.updateDataUser(email, name, biodetails, country);
+
+	        return ResponseEntity.ok(user);
+	    } catch (Exception e) {
+	        return ResponseEntity.badRequest().build();
+	    }
 	}
 
 	// changing the password
-	@PatchMapping("/user/{id}/updatePassword")
-	public ResponseEntity<?> userPasswordChange(@PathVariable int id, @RequestParam String newPassword,
-			@RequestParam String oldPassword) {
+	
+	@PatchMapping("/user/updatePassword")
+	public ResponseEntity<?> userPasswordChange(
+	        @RequestParam String newPassword,
+	        @RequestParam String oldPassword,
+	        Authentication auth
+	) {
+	    String email = auth.getName();
 
-		try {
-			User user = userService.updateUserPassword(newPassword, id, oldPassword);
-			return ResponseEntity.ok(user);
-		} catch (RuntimeException e) {
-			return ResponseEntity.badRequest().body(e.getMessage());
-		}
+	    User user = userService.updateUserPassword(newPassword, email, oldPassword);
+
+	    return ResponseEntity.ok(user);
 	}
 
 	// Get all users
@@ -158,26 +169,35 @@ public class UserController {
 	}
 
 	// Delete user and all associated videos & profile pic
-	@DeleteMapping("/user/{id}")
-	public ResponseEntity<String> deleteUser(@PathVariable int id) {
-		try {
-			userService.deleteUserById(id);
-			return ResponseEntity.ok("Deleted Successfully");
-		} catch (EntityNotFoundException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-		}
+	@DeleteMapping("/user")
+	public ResponseEntity<String> deleteUser(Authentication auth) {
+	    try {
+	        String email = auth.getName();
+
+	        userService.deleteUserByEmail(email);
+
+	        return ResponseEntity.ok("Account deleted successfully");
+
+	    } catch (RuntimeException e) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                .body(e.getMessage());
+	    }
 	}
 
 	// Delete only profile picture
-	@DeleteMapping("/user/{id}/profile-pic")
-	public ResponseEntity<String> deleteProfilePicture(@PathVariable int id) {
-		try {
-			userService.deleteUserProfileImage(id);
-			return ResponseEntity.ok("Profile picture deleted successfully.");
-		} catch (RuntimeException e) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND)
-					.body("Error deleting profile picture: " + e.getMessage());
-		}
+	@DeleteMapping("/user/profile-pic")
+	public ResponseEntity<String> deleteProfilePicture(Authentication auth) {
+	    try {
+	        String email = auth.getName();
+
+	        userService.deleteUserProfileImage(email);
+
+	        return ResponseEntity.ok("Profile picture deleted successfully.");
+
+	    } catch (RuntimeException e) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                .body("Error deleting profile picture: " + e.getMessage());
+	    }
 	}
 
 	@PostMapping("/forgot-password")

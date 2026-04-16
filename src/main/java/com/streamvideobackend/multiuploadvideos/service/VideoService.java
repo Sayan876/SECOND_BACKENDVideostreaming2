@@ -47,20 +47,24 @@ public class VideoService {
     }
 
     // Upload video to Cloudinary and save in DB
-    public Video saveVideo(Video video, MultipartFile file, int userId) {
-        User user = userRepository.findById(userId)
+    public Video saveVideo(Video video, MultipartFile file, String email) {
+
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
+        // ✅ verification check stays same
         if (!user.isVerified()) {
             throw new RuntimeException("Please verify your account before uploading videos");
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
                     ObjectUtils.asMap(
                             "resource_type", "video",
-                            "folder", "videos/user_" + userId
-                    ));
+                            "folder", "videos/user_" + user.getId()
+                    )
+            );
 
             video.setVideoUrl(uploadResult.get("secure_url").toString());
             video.setPublicId(uploadResult.get("public_id").toString());
@@ -75,14 +79,20 @@ public class VideoService {
     }
 
     // Update title and description
-    public Video updatetanddec(String title, String description, String category, String videoId) {
-        Optional<Video> recVideo = videoRepository.findById(videoId);
-        if (recVideo.isEmpty()) return null;
+    public Video updatetanddec(String title, String description, String category, String videoId, String email) {
 
-        Video video = recVideo.get();
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+
+        // 🔥 OWNER CHECK
+        if (!video.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("You are not allowed to edit this video");
+        }
+
         video.setTitle(title);
         video.setDescription(description);
         video.setCategory(category);
+
         return videoRepository.save(video);
     }
 
@@ -126,18 +136,27 @@ public class VideoService {
     }
 
     // Delete video from Cloudinary and DB
-    public boolean deleteVideoById(String videoId) {
-        Optional<Video> recVideo = videoRepository.findById(videoId);
-        if (recVideo.isEmpty()) return false;
+    public boolean deleteVideoById(String videoId, String email) {
 
-        Video video = recVideo.get();
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+
+        // 🔥 OWNER CHECK
+        if (!video.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("You are not allowed to delete this video");
+        }
+
         try {
-            cloudinary.uploader().destroy(video.getPublicId(), ObjectUtils.asMap("resource_type", "video"));
+            cloudinary.uploader().destroy(
+                    video.getPublicId(),
+                    ObjectUtils.asMap("resource_type", "video")
+            );
+
             videoRepository.delete(video);
             return true;
+
         } catch (Exception e) {
-            System.err.println("Error deleting video: " + e.getMessage());
-            return false;
+            throw new RuntimeException("Error deleting video: " + e.getMessage());
         }
     }
 
@@ -152,6 +171,11 @@ public class VideoService {
     public List<Video> getAllVideosWithUploader() {
         return videoRepository.findAllVideosWithUsers1();
     }
+    
+    public User findByEmail(String email) {
+	    return userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+	}
     
     
 }

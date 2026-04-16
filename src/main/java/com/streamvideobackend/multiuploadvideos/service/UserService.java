@@ -161,40 +161,36 @@ public class UserService {
 	}
 
 	//Update user details 
-	public User updateDataUser(int id, String name, String biodetials, String country) {
-		Optional<User> optionalUser = userRepository.findById(id);
-		if (optionalUser.isEmpty()) {
-			throw new RuntimeException("User not found with ID: " + id);
-		}
+	public User updateDataUser(String email, String name, String biodetails, String country) {
 
-		User user = optionalUser.get();
-		try {
-			user.setName(name);
-			
-			user.setBiodetails(biodetials);
-			user.setCountry(country);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	    Optional<User> optionalUser = userRepository.findByEmail(email);
 
-		return userRepository.save(user);
+	    if (optionalUser.isEmpty()) {
+	        throw new RuntimeException("User not found");
+	    }
 
+	    User user = optionalUser.get();
+
+	    user.setName(name);
+	    user.setBiodetails(biodetails);
+	    user.setCountry(country);
+
+	    return userRepository.save(user);
 	}
 
 
 	//Change password 
-	public User updateUserPassword(String newPassword, int id, String oldPassword) {
+	public User updateUserPassword(String newPassword, String email, String oldPassword) {
 
-	    User user = userRepository.findById(id)
+	    User user = userRepository.findByEmail(email)
 	            .orElseThrow(() -> new RuntimeException("User not found"));
 
-	    // VALIDATE OLD PASSWORD
-	    if (!passwordEncoder.matches(oldPassword, user.getPassword()))
- {
+	    // ✅ check old password
+	    if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
 	        throw new RuntimeException("Old password is incorrect");
 	    }
 
+	    // ✅ set new password
 	    user.setPassword(passwordEncoder.encode(newPassword));
 
 	    return userRepository.save(user);
@@ -232,22 +228,27 @@ public class UserService {
     }
 
 	// Delete profile picture
-	public User deleteUserProfileImage(int userId) {
-		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+	public User deleteUserProfileImage(String email) {
 
-		try {
-			if (user.getProfilePicPublicId() != null) {
-				cloudinary.uploader().destroy(user.getProfilePicPublicId(),
-						ObjectUtils.asMap("resource_type", "image"));
-				user.setProfilePicUrl(null);
-				user.setProfilePicPublicId(null);
-			}
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
 
-			return userRepository.save(user);
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to delete profile picture", e);
-		}
+	    try {
+	        if (user.getProfilePicPublicId() != null) {
+	            cloudinary.uploader().destroy(
+	                    user.getProfilePicPublicId(),
+	                    ObjectUtils.asMap("resource_type", "image")
+	            );
+
+	            user.setProfilePicUrl(null);
+	            user.setProfilePicPublicId(null);
+	        }
+
+	        return userRepository.save(user);
+
+	    } catch (IOException e) {
+	        throw new RuntimeException("Failed to delete profile picture", e);
+	    }
 	}
 	
 	
@@ -256,27 +257,30 @@ public class UserService {
 	}
 
 	// Delete user and all videos
-	public void deleteUserById(int id) {
-		User user = userRepository.findById(id)
-				.orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
+	public void deleteUserByEmail(String email) {
 
-		// Delete videos
-		List<Video> videos = videoService.getVideoByUserIdNumber(id);
-		for (Video v : videos) {
-			videoService.deleteVideoById(v.getVideoId());
-		}
+	    User user = userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
 
-		// Delete profile pic from Cloudinary
-		if (user.getProfilePicPublicId() != null) {
-			try {
-				cloudinary.uploader().destroy(user.getProfilePicPublicId(),
-						ObjectUtils.asMap("resource_type", "image"));
-			} catch (IOException e) {
-				System.err.println("Failed to delete user profile pic: " + e.getMessage());
-			}
-		}
+	    // 🔥 delete all user videos (secure version)
+	    List<Video> videos = videoService.getVideoByUserIdNumber(user.getId());
+	    for (Video v : videos) {
+	        videoService.deleteVideoById(v.getVideoId(), email); // 🔥 pass email
+	    }
 
-		userRepository.delete(user);
+	    // 🔥 delete profile pic
+	    if (user.getProfilePicPublicId() != null) {
+	        try {
+	            cloudinary.uploader().destroy(
+	                    user.getProfilePicPublicId(),
+	                    ObjectUtils.asMap("resource_type", "image")
+	            );
+	        } catch (IOException e) {
+	            System.err.println("Failed to delete profile pic: " + e.getMessage());
+	        }
+	    }
+
+	    userRepository.delete(user);
 	}
 	
 	

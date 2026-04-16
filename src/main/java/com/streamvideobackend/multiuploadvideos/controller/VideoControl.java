@@ -1,4 +1,5 @@
 package com.streamvideobackend.multiuploadvideos.controller;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,12 +25,16 @@ public class VideoControl {
     private final VideoService videoService;
 
     // Create/upload video
-    @PostMapping("/{id}")
-    public ResponseEntity<?> create(@RequestParam("file") MultipartFile file,
-                                    @RequestParam("title") String title,
-                                    @RequestParam("description") String description,
-                                    @RequestParam("category") String category,
-                                    @PathVariable int id) {
+    @PostMapping
+    public ResponseEntity<?> create(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam String title,
+            @RequestParam String description,
+            @RequestParam String category,
+            Authentication auth
+    ) {
+
+        String email = auth.getName();
 
         Video video = Video.builder()
                 .videoId(UUID.randomUUID().toString())
@@ -38,22 +43,37 @@ public class VideoControl {
                 .category(category)
                 .build();
 
-        Video savedVideo = videoService.saveVideo(video, file, id);
+        Video savedVideo = videoService.saveVideo(video, file, email);
+
         return ResponseEntity.ok(savedVideo);
     }
 
     // Update title & description
     @PatchMapping("/{id}")
-    public ResponseEntity<?> updateVideo(@PathVariable String id,
-                                         @RequestParam("title") String title,
-                                         @RequestParam("description") String description,
-                                         @RequestParam("category") String category) {
+    public ResponseEntity<?> updateVideo(
+            @PathVariable String id,
+            @RequestParam String title,
+            @RequestParam String description,
+            @RequestParam String category,
+            Authentication auth
+    ) {
 
-        Video updated = videoService.updatetanddec(title, description, category, id);
-        if (updated == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Video not found");
+        try {
+            String email = auth.getName();
 
-        return ResponseEntity.ok(updated);
+            Video updated = videoService.updatetanddec(
+                    title,
+                    description,
+                    category,
+                    id,
+                    email
+            );
+
+            return ResponseEntity.ok(updated);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
     // Get all videos newest first
@@ -82,19 +102,28 @@ public class VideoControl {
 
     // Delete video
     @DeleteMapping("/{videoId}")
-    public ResponseEntity<String> deleteVideo(@PathVariable String videoId) {
-        boolean deleted = videoService.deleteVideoById(videoId);
-        if (deleted)
+    public ResponseEntity<String> deleteVideo(
+            @PathVariable String videoId,
+            Authentication auth
+    ) {
+        try {
+            String email = auth.getName();
+
+            videoService.deleteVideoById(videoId, email);
+
             return ResponseEntity.ok("Video deleted successfully");
-        else
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Video not found or could not be deleted");
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+        }
     }
 
     // Get user ID by video ID
-    @GetMapping("/getUserIdByVideoId/{videoId}")
-    public ResponseEntity<Integer> getUserId(@PathVariable String videoId) {
-        return ResponseEntity.ok(videoService.getUserIdByVideoId(videoId));
-    }
+//    @GetMapping("/getUserIdByVideoId/{videoId}")
+//    public ResponseEntity<Integer> getUserId(@PathVariable String videoId) {
+//        return ResponseEntity.ok(videoService.getUserIdByVideoId(videoId));
+//    }
 
     // Get user by video ID
     @GetMapping("/getUserByVideo/{videoId}")
