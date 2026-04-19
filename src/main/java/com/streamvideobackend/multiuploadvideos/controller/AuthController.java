@@ -18,7 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@CrossOrigin(origins = "https://video-streaming-frontend-eight.vercel.app", allowedHeaders = "*")
 public class AuthController {
 	
 	private final UserRepository userRepository; 
