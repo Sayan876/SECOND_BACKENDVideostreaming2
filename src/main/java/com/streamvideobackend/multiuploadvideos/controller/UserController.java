@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@CrossOrigin(origins = "https://video-streaming-frontend-eight.vercel.app", allowedHeaders = "*")
 public class UserController {
 
 	private final UserService userService;
@@ -247,19 +247,26 @@ public class UserController {
 	}
 
 	@PostMapping("/send-otp")
-	public ResponseEntity<?> sendOtp(@RequestParam String email) {
+	public ResponseEntity<?> sendOtp(Authentication auth) {
 
-		userService.sendVerificationOtp(email);
+	    String email = auth.getName();
 
-		return ResponseEntity.ok("OTP sent successfully");
+	    userService.sendVerificationOtp(email);
+
+	    return ResponseEntity.ok("OTP sent successfully");
 	}
 
 	@PostMapping("/verify-otp")
-	public ResponseEntity<?> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+	public ResponseEntity<?> verifyOtp(
+	        @RequestParam String otp,
+	        Authentication auth
+	) {
 
-		userService.verifyOtp(email, otp);
+	    String email = auth.getName();   // 🔥 from JWT
 
-		return ResponseEntity.ok("Account verified successfully");
+	    userService.verifyOtp(email, otp);
+
+	    return ResponseEntity.ok("Account verified successfully");
 	}
 
 	@GetMapping("/user/me")
