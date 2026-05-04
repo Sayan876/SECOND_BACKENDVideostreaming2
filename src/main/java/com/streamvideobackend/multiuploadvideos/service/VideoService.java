@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -60,7 +59,7 @@ public class VideoService {
 
         try {
             Map uploadResult = cloudinary.uploader().upload(
-                    file.getInputStream(),
+                    file.getBytes(),
                     ObjectUtils.asMap(
                             "resource_type", "video",
                             "folder", "videos/user_" + user.getId()
@@ -101,6 +100,85 @@ public class VideoService {
     public List<Video> getAllLatestToNew() {
         return videoRepository.findAllVideosOrderByUploadedAtDesc();
     }
+
+    public Video getVideoById(String id) {
+        return videoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+    }
+    
+    public List<Video> getVideosByCategory(String category) {
+        return videoRepository.findByCategoryIgnoreCase(category);
+    }
+
+    public List<Video> getVideoByUserIdNumber(int id) {
+        return videoRepository.getVideosByUserId(id);
+    }
+    
+    public List<Video> getVideosByOneName(String oneName){
+    	return videoRepository.getVideosByOneName(oneName);
+    }
+    
+
+    //for searching title
+    public List<Video> getVideoByTitle(String title) {
+    return videoRepository.findByTitleContainingIgnoreCase(title);
+}
+
+    public User getUserByVideoId(String videoId) {
+        User user =  videoRepository.findUserByVideoId(videoId);
+        if(user!=null) {
+        	user.setId(0);
+        	user.setPassword(null);
+        	user.setEmail(null);
+        	return user;
+        }
+        return null;
+    }
+
+    // Delete video from Cloudinary and DB
+    public boolean deleteVideoById(String videoId, String email) {
+
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
+
+        // 🔥 OWNER CHECK
+        if (!video.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("You are not allowed to delete this video");
+        }
+
+        try {
+            cloudinary.uploader().destroy(
+                    video.getPublicId(),
+                    ObjectUtils.asMap("resource_type", "video")
+            );
+
+            videoRepository.delete(video);
+            return true;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error deleting video: " + e.getMessage());
+        }
+    }
+
+    public int getUserIdByVideoId(String videoId) {
+        return videoRepository.findUserIdByVideoId(videoId);
+    }
+
+    public List<Video> getVideosbyEmailandPass(String email, String pass) {
+        return videoRepository.getVideosByUserEmailandPassword(email, pass);
+    }
+    
+    public List<Video> getAllVideosWithUploader() {
+        return videoRepository.findAllVideosWithUsers1();
+    }
+    
+    public User findByEmail(String email) {
+	    return userRepository.findByEmail(email)
+	            .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+	}
+    
+    
+}    }
 
     public Video getVideoById(String id) {
         return videoRepository.findById(id)
