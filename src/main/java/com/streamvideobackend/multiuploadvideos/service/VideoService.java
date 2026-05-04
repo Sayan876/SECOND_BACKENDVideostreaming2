@@ -59,7 +59,7 @@ public class VideoService {
 
         try {
             Map uploadResult = cloudinary.uploader().upload(
-                    file.getBytes(),
+                    file.getInputStream(),
                     ObjectUtils.asMap(
                             "resource_type", "video",
                             "folder", "videos/user_" + user.getId()
