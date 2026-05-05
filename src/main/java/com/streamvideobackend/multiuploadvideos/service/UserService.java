@@ -187,7 +187,7 @@ public class UserService {
 
 	    // ✅ check old password
 	    if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-	        throw new RuntimeException("Old password is incorrect");
+	        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password is incorrect");
 	    }
 
 	    // ✅ set new password
