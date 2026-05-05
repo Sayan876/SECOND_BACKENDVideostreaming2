@@ -57,7 +57,9 @@ public class Video {
         "profilePicPublicId",
         "biodetails",
         "country",
-        "accountCreatedAt"
+        "accountCreatedAt",
+        "resetToken",
+        "tokenExpiry"
     })
     private User user;
 
